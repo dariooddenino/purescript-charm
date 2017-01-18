@@ -45,10 +45,11 @@ exports._setPosition = function (x, y, charm) {
   }
 }
 
-// @TODO
 exports._getPosition = function (cb, charm) {
   return function () {
-    // @ TODO
+    charm.position(function (x, y) {
+      cb(x)();
+    })
   }
 }
 
@@ -100,9 +101,6 @@ exports._pop = function (w, charm) {
     return {};
   }
 }
-
-// exports._push @TODO
-// exports._pop @TODO
 
 exports._erase = function (string, charm) {
   return function () {
