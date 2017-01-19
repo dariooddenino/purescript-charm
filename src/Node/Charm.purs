@@ -4,6 +4,7 @@ import Prelude
 import Control.Monad.Trans.Class
 import Control.Monad.Aff
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class
 import Control.Monad.Eff.Exception
 import Control.Monad.Reader (Reader, ask, runReader)
 import Control.Monad.Reader.Trans (ReaderT, runReaderT)
@@ -76,7 +77,7 @@ foreign import _destroy :: forall eff. ChF1 eff
 foreign import _end :: forall eff. ChF1 eff
 foreign import _write :: forall eff. ChF2 eff String
 foreign import _setPosition :: forall eff. ChF3 eff Int Int
-foreign import _getPosition :: forall eff. Fn2 (Unit -> CharmEff eff Unit) Charm (CharmEff eff Unit)
+foreign import _getPosition :: forall eff. Fn2 (Int -> CharmEff eff Unit) Charm (CharmEff eff Unit)
 foreign import _move :: forall eff. ChF3 eff Int Int
 foreign import _up :: forall eff. ChF2 eff Int
 foreign import _down :: forall eff. ChF2 eff Int
@@ -136,14 +137,14 @@ setPosition :: forall eff. Int -> Int -> CharmM eff
 setPosition x y = ask >>= lift <<< runFn3 _setPosition x y
 
 
--- getPosition' :: forall eff. Charm -> Aff (charm :: CHARM | eff) Unit
--- getPosition' c = makeAff (\error success -> runFn2 _getPosition success c)
+getPosition' :: forall eff. Charm -> Aff (charm :: CHARM | eff) Int
+getPosition' c = makeAff (\_ success -> runFn2 _getPosition success c)
 
--- getPosition :: forall eff. ReaderT Charm (Eff (charm :: CHARM, err :: EXCEPTION | eff)) Int
--- getPosition = do
---   c <- ask
---   i <- launchAff $ getPosition' c
---   lift $ pure i
+getPosition :: forall eff. ReaderT Charm (Eff (charm :: CHARM, err :: EXCEPTION | eff)) Unit
+getPosition = do
+  c <- ask
+  lift $ void $ launchAff $ getPosition' c
+
 
 -- -- | Moves the cursor position by the relative coordinates x and y
 move :: forall eff. Int -> Int -> CharmM eff
