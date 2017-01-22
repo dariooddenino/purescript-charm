@@ -1,7 +1,7 @@
 {
   "name": "purescript-charm",
   "version": "0.3.0",
-  "description": "",
+  "description": "A PureScript wrapper for Charm",
   "main": "index.js",
   "directories": {
     "test": "test"

@@ -1,7 +1,9 @@
 Purescript Charm
 ================
 
-A PureScript wrapper for [Charm](https://github.com/substack/node-charm)
+A PureScript wrapper for [Charm](https://github.com/substack/node-charm).
+
+Use ansi terminal characters to write colors and cursor positions.
 
 Example
 =======
