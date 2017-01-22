@@ -1,16 +1,46 @@
-module Node.Charm where
+module Node.Charm (
+  CHARM,
+  Charm,
+  CharmM,
+  Region(..),
+  Mode(..),
+  Display(..),
+  Colors(..),
+  Color,
+  charm,
+  render,
+  reset,
+  destroy,
+  end,
+  write,
+  setPosition,
+  move,
+  up,
+  down,
+  left,
+  right,
+  push,
+  pop,
+  erase,
+  delete,
+  insert,
+  display,
+  foreground,
+  background,
+  cursor
+) where
 
-import Prelude
-import Control.Monad.Trans.Class
-import Control.Monad.Aff
+import Prelude (class Show, Unit, flip, show, (<<<), (>>=))
+import Control.Monad.Trans.Class (lift)
+-- import Control.Monad.Aff
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class
-import Control.Monad.Eff.Exception
-import Control.Monad.Reader (Reader, ask, runReader)
+-- import Control.Monad.Eff.Class
+-- import Control.Monad.Eff.Exception
+import Control.Monad.Reader (ask)
 import Control.Monad.Reader.Trans (ReaderT, runReaderT)
 import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn1, Fn2, runFn2, Fn3, runFn3)
-import Data.Traversable (traverse_)
+
 
 -- Types
 
@@ -77,7 +107,7 @@ foreign import _destroy :: forall eff. ChF1 eff
 foreign import _end :: forall eff. ChF1 eff
 foreign import _write :: forall eff. ChF2 eff String
 foreign import _setPosition :: forall eff. ChF3 eff Int Int
-foreign import _getPosition :: forall eff. Fn2 (Int -> CharmEff eff Unit) Charm (CharmEff eff Unit)
+-- foreign import _getPosition :: forall eff. Fn2 (Int -> CharmEff eff Unit) Charm (CharmEff eff Unit)
 foreign import _move :: forall eff. ChF3 eff Int Int
 foreign import _up :: forall eff. ChF2 eff Int
 foreign import _down :: forall eff. ChF2 eff Int
@@ -137,13 +167,14 @@ setPosition :: forall eff. Int -> Int -> CharmM eff
 setPosition x y = ask >>= lift <<< runFn3 _setPosition x y
 
 
-getPosition' :: forall eff. Charm -> Aff (charm :: CHARM | eff) Int
-getPosition' c = makeAff (\_ success -> runFn2 _getPosition success c)
+-- @TODO: not working as intended
+-- getPosition' :: forall eff. Charm -> Aff (charm :: CHARM | eff) Int
+-- getPosition' c = makeAff (\_ success -> runFn2 _getPosition success c)
 
-getPosition :: forall eff. ReaderT Charm (Eff (charm :: CHARM, err :: EXCEPTION | eff)) Unit
-getPosition = do
-  c <- ask
-  lift $ void $ launchAff $ getPosition' c
+-- getPosition :: forall eff. ReaderT Charm (Eff (charm :: CHARM, err :: EXCEPTION | eff)) Unit
+-- getPosition = do
+--   c <- ask
+--   lift $ void $ launchAff $ getPosition' c
 
 
 -- -- | Moves the cursor position by the relative coordinates x and y
@@ -188,7 +219,6 @@ erase r = ask >>= lift <<< runFn2 _erase (show r)
 -- -- | Deletes lines or chars. Differs from erase because it does not write over deleted characters with whitespace.
 -- -- | LineMode | CharMode
 -- -- | The cursor position is not updated.
--- -- | @FIXME: not working?
 delete :: forall eff. Mode -> Int -> CharmM eff
 delete m n = ask >>= lift <<< runFn3 _delete (show m) n
 
@@ -199,7 +229,6 @@ insert m n = ask >>= lift <<< runFn3 _insert (show m) n
 
 
 -- -- | Sets the display mode to Display
--- -- | @FIXME: not working?
 display :: forall eff. Display -> CharmM eff
 display d = ask >>= lift <<< runFn2 _display (show d)
 

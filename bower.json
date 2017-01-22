@@ -11,8 +11,7 @@
     "purescript-console": "^2.0.0",
     "purescript-functions": "^2.0.0",
     "purescript-either": "^2.1.0",
-    "purescript-transformers": "^2.1.0",
-    "purescript-aff": "^2.0.2"
+    "purescript-transformers": "^2.1.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^2.0.0",

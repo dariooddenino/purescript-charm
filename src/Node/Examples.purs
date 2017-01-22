@@ -32,21 +32,7 @@ twofivesix = do
          else writeSTRef i $ step + 1
       pure unit
 
-sleep = later' 1500 $ makeAff (\_ s -> pure unit)
-
-twofivesix' = do
-  let c = charm []
-      r = render c
-  r reset
-  forE 0 255 \i -> do
-    r do
-      background (Right i)
-      write " "
-    void $ launchAff sleep
-    pure unit
-  r $ display Reset
-  r end
-
+column :: Eff (charm :: CHARM) Unit
 column = do
   let c = charm []
   render c do
