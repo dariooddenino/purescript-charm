@@ -11,7 +11,7 @@ import Control.Monad.Eff.Class
 import Control.Monad.Reader
 import Control.Monad.Rec.Class
 import Control.Monad.ST
-import Control.Monad.Aff
+-- import Control.Monad.Aff
 import Data.Maybe
 import Data.Array
 import Data.String (toCharArray)
