@@ -45,13 +45,13 @@ exports._setPosition = function (x, y, charm) {
   }
 }
 
-exports._getPosition = function (cb, charm) {
-  return function () {
-    charm.position(function (x, y) {
-      cb(x)();
-    })
-  }
-}
+// exports._getPosition = function (cb, charm) {
+//   return function () {
+//     charm.position(function (x, y) {
+//       cb(x)();
+//     })
+//   }
+// }
 
 exports._move = function (x, y, charm) {
     return function () {
