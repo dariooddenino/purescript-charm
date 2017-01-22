@@ -1,21 +1,16 @@
 module Node.Charm.Examples where
 
-import Node.Charm
-import Prelude
-import Data.Either
-import Control.Monad.Eff
-import Control.Monad.Eff.Console
-import Control.Monad.Eff.Timer
-import Control.Monad.Trans.Class
-import Control.Monad.Eff.Class
-import Control.Monad.Reader
-import Control.Monad.Rec.Class
-import Control.Monad.ST
--- import Control.Monad.Aff
-import Data.Maybe
+import Node.Charm (CHARM, Colors(..), Display(..), Region(..), background, charm, display, down, end, erase, foreground, left, move, pop, push, render, reset, right, setPosition, up, write)
+import Prelude (Unit, bind, negate, pure, show, unit, void, when, ($), (*), (+), (-), (/), (<=), (<>), (==), (>=), (||))
+import Data.Either (Either(..))
+import Control.Monad.Eff (Eff, forE)
+import Control.Monad.Eff.Timer (TIMER, setInterval)
+import Control.Monad.ST (newSTRef, readSTRef, runST, writeSTRef)
+import Data.Maybe (Maybe, fromMaybe)
 import Data.Array
 import Data.String (toCharArray)
 
+twofivesix :: Eff (charm :: CHARM, timer :: TIMER) Unit
 twofivesix = do
   let c = charm []
       r = render c
@@ -44,6 +39,7 @@ column = do
     write "boop\n"
     end
 
+cursorEx :: Eff (charm :: CHARM) Unit
 cursorEx = do
   let c = charm []
   render c do
@@ -68,6 +64,7 @@ cursorEx = do
     erase Line
     end
 
+lucky :: Eff (charm :: CHARM, timer :: TIMER) Unit
 lucky = do
   let c = charm []
       r = render c
@@ -104,6 +101,7 @@ lucky = do
       writeSTRef offset $ offsetV + 1
       pure unit
 
+progress :: Eff (charm :: CHARM, timer :: TIMER) Unit
 progress = do
   let c = charm []
       r = render c
