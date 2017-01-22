@@ -21,6 +21,7 @@ main = do
         right 32
         foreground $ Left Magenta
         write "boop\n"
+        display Reset
         end
 ```
 
