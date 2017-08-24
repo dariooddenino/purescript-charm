@@ -1,5 +1,36 @@
-module Node.Charm where
+module Node.Charm (
+  CHARM,
+  Charm,
+  CharmM,
+  Region(..),
+  Mode(..),
+  Display(..),
+  Colors(..),
+  Color,
+  charm,
+  render,
+  reset,
+  destroy,
+  end,
+  write,
+  setPosition,
+  move,
+  up,
+  down,
+  left,
+  right,
+  push,
+  pop,
+  erase,
+  delete,
+  insert,
+  display,
+  foreground,
+  background,
+  cursor
+) where
 
+import Prelude (class Show, Unit, flip, show, (<<<), (>>=))
 import Control.Monad.Trans.Class (lift)
 import Prelude
 import Control.Monad.Eff (Eff, kind Effect)
@@ -73,7 +104,7 @@ foreign import _destroy :: forall eff. ChF1 eff
 foreign import _end :: forall eff. ChF1 eff
 foreign import _write :: forall eff. ChF2 eff String
 foreign import _setPosition :: forall eff. ChF3 eff Int Int
-foreign import _getPosition :: forall eff. Fn2 (Int -> CharmEff eff Unit) Charm (CharmEff eff Unit)
+-- foreign import _getPosition :: forall eff. Fn2 (Int -> CharmEff eff Unit) Charm (CharmEff eff Unit)
 foreign import _move :: forall eff. ChF3 eff Int Int
 foreign import _up :: forall eff. ChF2 eff Int
 foreign import _down :: forall eff. ChF2 eff Int
@@ -184,7 +215,6 @@ erase r = ask >>= lift <<< runFn2 _erase (show r)
 -- -- | Deletes lines or chars. Differs from erase because it does not write over deleted characters with whitespace.
 -- -- | LineMode | CharMode
 -- -- | The cursor position is not updated.
--- -- | @FIXME: not working?
 delete :: forall eff. Mode -> Int -> CharmM eff
 delete m n = ask >>= lift <<< runFn3 _delete (show m) n
 
@@ -195,7 +225,6 @@ insert m n = ask >>= lift <<< runFn3 _insert (show m) n
 
 
 -- -- | Sets the display mode to Display
--- -- | @FIXME: not working?
 display :: forall eff. Display -> CharmM eff
 display d = ask >>= lift <<< runFn2 _display (show d)
 
