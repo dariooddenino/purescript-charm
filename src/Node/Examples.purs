@@ -2,38 +2,45 @@ module Node.Charm.Examples where
 
 import Node.Charm
 import Prelude
-import Data.Either
-import Control.Monad.Eff
-import Control.Monad.Eff.Console
-import Control.Monad.Eff.Timer
-import Control.Monad.Trans.Class
-import Control.Monad.Eff.Class
-import Control.Monad.Reader
-import Control.Monad.Rec.Class
-import Control.Monad.ST
-import Control.Monad.Aff
-import Data.Maybe
-import Data.Array
-import Data.String (toCharArray)
 
-twofivesix = do
+import Control.Monad.Aff (Aff, delay, launchAff)
+import Control.Monad.Eff (Eff, forE)
+import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Exception (EXCEPTION)
+import Control.Monad.ST (ST, modifySTRef, newSTRef, readSTRef, writeSTRef)
+import Data.Array (index, length)
+import Data.Either (Either(..))
+import Data.Maybe (Maybe, fromMaybe)
+import Data.String (toCharArray)
+import Data.Time.Duration (Milliseconds(..))
+
+sleep :: forall e. Aff e Unit
+sleep = delay (Milliseconds 30.0)
+
+twofivesix :: forall e s. Eff (charm :: CHARM, st :: ST s, exception :: EXCEPTION | e) Unit
+twofivesix = void $ launchAff $ do
   let c = charm []
       r = render c
-  runST do
-    r reset
-    i <- newSTRef 0
-    void $ setInterval 15 do
-      step <- readSTRef i
-      r do
-        background (Right step)
-        write " "
-      if step == 255
-         then writeSTRef i 0
-         else writeSTRef i $ step + 1
+  liftEff $ r reset
+  n <- liftEff $ newSTRef 0
+  innerLoop r n
+  where
+    innerLoop r n = do
+      step <- liftEff $ readSTRef n
+      _ <- liftEff $ r $ background (Right step)
+      liftEff $ r $ write " "
+      _ <- if step == 255
+           then do
+             liftEff $ r end
+             pure unit
+           else do
+             _ <- sleep
+             _ <- liftEff $ modifySTRef n (_ + 1)
+             innerLoop r n
       pure unit
 
-sleep = later' 1500 $ makeAff (\_ s -> pure unit)
 
+twofivesix' :: forall e. Eff (charm :: CHARM | e) Unit
 twofivesix' = do
   let c = charm []
       r = render c
@@ -42,11 +49,12 @@ twofivesix' = do
     r do
       background (Right i)
       write " "
-    void $ launchAff sleep
     pure unit
   r $ display Reset
   r end
+  pure unit
 
+column :: forall e. Eff (charm :: CHARM | e) Unit
 column = do
   let c = charm []
   render c do
@@ -58,6 +66,7 @@ column = do
     write "boop\n"
     end
 
+cursorEx :: forall e. Eff (charm :: CHARM | e) Unit
 cursorEx = do
   let c = charm []
   render c do
@@ -82,56 +91,68 @@ cursorEx = do
     erase Line
     end
 
-lucky = do
-  let c = charm []
-      r = render c
-      colors = [ Red, Cyan, Yellow, Green, Blue ]
-      text = [ "A", "l", "w", "a", "y", "s", " ", "a", "f", "t", "e", "r", " "
-             , "m", "e", " ", "l", "u", "c", "k", "y", " ", "c", "h", "a", "r", "m", "s", "."
-             ]
-      getV :: forall a. Array a -> Int -> Maybe a
-      getV arr i = index arr $ i - (length arr) * (i / length arr)
-  runST do
-    r reset
-    offset <- newSTRef 0
-    y <- newSTRef 0
-    dy <- newSTRef 1
-    void $ setInterval 150 do
-      writeSTRef y 0
-      writeSTRef dy 1
-      offsetV <- readSTRef offset
-      forE 0 40 \i -> do
-        dyV <- readSTRef dy
+getV :: forall a. Array a -> Int -> Maybe a
+getV arr i = index arr $ i - (length arr) * (i / length arr)
+
+lucky :: forall e s. Eff (charm :: CHARM, st :: ST s, exception :: EXCEPTION | e) Unit
+lucky = void $ launchAff do
+  liftEff $ r reset
+  offset <- liftEff $ newSTRef 0
+  y <- liftEff $ newSTRef 0
+  dy <- liftEff $ newSTRef 1
+  innerLoop r colors text offset y dy
+  where
+    c = charm []
+    r = render c
+    colors = [ Red, Cyan, Yellow, Green, Blue ]
+    text = [ "A", "l", "w", "a", "y", "s", " ", "a", "f", "t", "e", "r", " "
+           , "m", "e", " ", "l", "u", "c", "k", "y", " ", "c", "h", "a", "r", "m", "s", "."
+           ]
+    innerLoop r colors text offset y dy = do
+      _ <- sleep
+      _ <- liftEff $ writeSTRef y 0
+      _ <- liftEff $ writeSTRef dy 1
+      offsetV <- liftEff $ readSTRef offset
+      liftEff $ forE 0 40 \i -> do
+        dyV <- liftEff $ readSTRef dy
         yV <- readSTRef y
-        let color = getV colors (i + offsetV)
-            letter = getV text (i + offsetV)
-        r do
+        let
+          color = getV colors (i + offsetV)
+          letter = getV text (i + offsetV)
+        liftEff $ r do
           move 1 dyV
           foreground $ Left (fromMaybe Red color)
-          write $ fromMaybe "A" letter
-        writeSTRef y $ yV + dyV
-        writeSTRef dy $ if (yV + dyV <= 0 || yV + dyV >= 5)
-                        then -dyV
-                        else dyV
+          write $ fromMaybe "A" $ letter
+        _ <- liftEff $ writeSTRef y $ yV + dyV
+        _ <- liftEff $ writeSTRef dy $ if (yV + dyV <= 0 || yV + dyV >= 5)
+                                       then -dyV
+                                       else dyV
         pure unit
-      r $ setPosition 0 1
-      writeSTRef offset $ offsetV + 1
-      pure unit
+      liftEff $ r $ setPosition 0 1
+      _ <- liftEff $ writeSTRef offset $ offsetV + 1
+      if offsetV > 300
+        then (liftEff $ r end) *> pure unit
+        else innerLoop r colors text offset y dy
 
-progress = do
+progress :: forall e s. Eff (charm :: CHARM, st :: ST s, exception :: EXCEPTION | e) Unit
+progress = void $ launchAff do
   let c = charm []
       r = render c
-  runST do
-    r reset
-    i <- newSTRef 0
-    r $ write "Progress: 0 %"
-    void $ setInterval 25 do
-      iV <- readSTRef i
-      r do
-        left ((_ + 2) $ length $ toCharArray $ show iV)
-        write (show (iV + 1) <> " %")
-      when (iV + 1 >= 100) do
-        r end
-      writeSTRef i (iV + 1)
-      pure unit
-    pure unit
+  liftEff $ r reset
+  i <- liftEff $ newSTRef 0
+  liftEff $ r $ write "Progress: 0 %"
+  innerLoop r i
+  where
+    innerLoop r i = do
+      i' <- liftEff $ readSTRef i
+      liftEff $ r do
+        left ((_ + 2) $ length $ toCharArray $ show i')
+        write (show (i' + 1) <> " %")
+      if (i' + 1 >= 100)
+        then do
+          liftEff $ r end
+          pure unit
+        else do
+          _ <- sleep
+          _ <- liftEff $ modifySTRef i (_ + 1)
+          innerLoop r i

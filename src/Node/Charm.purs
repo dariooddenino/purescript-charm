@@ -1,21 +1,17 @@
 module Node.Charm where
 
+import Control.Monad.Trans.Class (lift)
 import Prelude
-import Control.Monad.Trans.Class
-import Control.Monad.Aff
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class
-import Control.Monad.Eff.Exception
-import Control.Monad.Reader (Reader, ask, runReader)
+import Control.Monad.Eff (Eff, kind Effect)
+import Control.Monad.Reader (ask)
 import Control.Monad.Reader.Trans (ReaderT, runReaderT)
 import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn1, Fn2, runFn2, Fn3, runFn3)
-import Data.Traversable (traverse_)
 
 -- Types
 
-foreign import data CHARM :: !
-foreign import data Charm :: *
+foreign import data CHARM :: Effect
+foreign import data Charm :: Type
 
 type CharmEff e a = Eff (charm :: CHARM | e) a
 type CharmM e = ReaderT Charm (Eff (charm :: CHARM | e)) Unit
@@ -137,13 +133,13 @@ setPosition :: forall eff. Int -> Int -> CharmM eff
 setPosition x y = ask >>= lift <<< runFn3 _setPosition x y
 
 
-getPosition' :: forall eff. Charm -> Aff (charm :: CHARM | eff) Int
-getPosition' c = makeAff (\_ success -> runFn2 _getPosition success c)
+-- getPosition' :: forall eff. Charm -> Aff (charm :: CHARM | eff) Int
+-- getPosition' c = makeAff (\_ success -> runFn2 _getPosition success c)
 
-getPosition :: forall eff. ReaderT Charm (Eff (charm :: CHARM, err :: EXCEPTION | eff)) Unit
-getPosition = do
-  c <- ask
-  lift $ void $ launchAff $ getPosition' c
+-- getPosition :: forall eff. ReaderT Charm (Eff (charm :: CHARM, err :: EXCEPTION | eff)) Unit
+-- getPosition = do
+--   c <- ask
+--   lift $ void $ launchAff $ getPosition' c
 
 
 -- -- | Moves the cursor position by the relative coordinates x and y
