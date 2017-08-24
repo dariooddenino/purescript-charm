@@ -7,5 +7,5 @@ import Node.Charm.Examples
 
 -- main :: forall e. Eff (console :: CONSOLE | e) Unit
 main = do
-  lucky
+  progress
 --  log "You should add some tests."
